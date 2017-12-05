@@ -1,4 +1,6 @@
-#pragma once
+#ifndef CONV_LAYER_H
+#define CONV_LAYER_H
+
 #include "layer_t.h"
 
 #pragma pack(push, 1)
@@ -182,3 +184,6 @@ struct conv_layer_t
 	}
 };
 #pragma pack(pop)
+
+#endif // CONV_LAYER_H
+

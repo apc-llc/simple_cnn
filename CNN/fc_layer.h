@@ -1,4 +1,6 @@
-#pragma once
+#ifndef FC_LAYER_H
+#define FC_LAYER_H
+
 #include <math.h>
 #include <float.h>
 #include <string.h>
@@ -119,3 +121,6 @@ struct fc_layer_t
 	}
 };
 #pragma pack(pop)
+
+#endif // FC_LAYER_H
+

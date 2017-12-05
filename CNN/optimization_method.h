@@ -1,4 +1,6 @@
-#pragma once
+#ifndef OPTIMIZATION_METHOD_H
+#define OPTIMIZATION_METHOD_H
+
 #include "gradient_t.h"
 
 #define LEARNING_RATE 0.01
@@ -17,3 +19,6 @@ static void update_gradient( gradient_t& grad )
 {
 	grad.oldgrad = (grad.grad + grad.oldgrad * MOMENTUM);
 }
+
+#endif // OPTIMIZATION_METHOD_H
+

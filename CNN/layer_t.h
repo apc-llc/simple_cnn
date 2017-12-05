@@ -1,4 +1,6 @@
-#pragma once
+#ifndef LAYER_H
+#define LAYER_H
+
 #include "types.h"
 #include "tensor_t.h"
 
@@ -11,3 +13,6 @@ struct layer_t
 	tensor_t<float> out;
 };
 #pragma pack(pop)
+
+#endif // LAYER_H
+

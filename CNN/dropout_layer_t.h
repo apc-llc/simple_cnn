@@ -1,4 +1,6 @@
-#pragma once
+#ifndef DROPOUT_LAYER_H
+#define DROPOUT_LAYER_H
+
 #include "layer_t.h"
 
 #pragma pack(push, 1)
@@ -51,3 +53,6 @@ struct dropout_layer_t
 	}
 };
 #pragma pack(pop)
+
+#endif // DROPOUT_LAYER_H
+

@@ -123,8 +123,6 @@ int main()
 	layers.push_back( (layer_t*)layer3 );
 	layers.push_back( (layer_t*)layer4 );
 
-
-
 	float amse = 0;
 	int ic = 0;
 
@@ -141,17 +139,8 @@ int main()
 
 			if ( ep % 1000 == 0 )
 				cout << "case " << ep << " err=" << amse/ic << endl;
-
-			// if ( GetAsyncKeyState( VK_F1 ) & 0x8000 )
-			// {
-			//	   printf( "err=%.4f%\n", amse / ic  );
-			//	   goto end;
-			// }
 		}
 	}
-	// end:
-
-
 
 	while ( true )
 	{
@@ -201,5 +190,7 @@ int main()
 		wait.tv_nsec = 0;
 		nanosleep(&wait, nullptr);
 	}
+
 	return 0;
 }
+

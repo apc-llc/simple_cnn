@@ -1,5 +1,5 @@
-#pragma once
-
+#ifndef GRADIENT_H
+#define GRADIENT_H
 
 struct gradient_t
 {
@@ -11,3 +11,6 @@ struct gradient_t
 		oldgrad = 0;
 	}
 };
+
+#endif // GRADIENT_H
+

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TYPES_H
+#define TYPES_H
 
 enum class layer_type
 {
@@ -8,3 +9,6 @@ enum class layer_type
 	pool,
 	dropout_layer
 };
+
+#endif // TYPES_H
+

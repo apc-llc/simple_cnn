@@ -1,4 +1,6 @@
-#pragma once
+#ifndef POOL_LAYER_H
+#define POOL_LAYER_H
+
 #include "layer_t.h"
 
 #pragma pack(push, 1)
@@ -138,3 +140,6 @@ struct pool_layer_t
 	}
 };
 #pragma pack(pop)
+
+#endif // POOL_LAYER_H
+

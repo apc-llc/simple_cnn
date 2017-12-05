@@ -1,4 +1,6 @@
-#pragma once
+#ifndef RELU_LAYER_H
+#define RELU_LAYER_H
+
 #include "layer_t.h"
 
 #pragma pack(push, 1)
@@ -56,3 +58,6 @@ struct relu_layer_t
 	}
 };
 #pragma pack(pop)
+
+#endif // RELU_LAYER_H
+

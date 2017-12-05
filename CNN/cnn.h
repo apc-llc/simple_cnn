@@ -1,4 +1,6 @@
-#pragma once
+#ifndef CNN_H
+#define CNN_H
+
 #include "tensor_t.h"
 #include "optimization_method.h"
 #include "fc_layer.h"
@@ -78,3 +80,6 @@ static void activate( layer_t* layer, tensor_t<float>& in )
 			assert( false );
 	}
 }
+
+#endif // CNN_H
+

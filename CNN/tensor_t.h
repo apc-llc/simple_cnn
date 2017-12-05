@@ -1,4 +1,6 @@
-#pragma once
+#ifndef TENSOR_T_H
+#define TENSOR_T_H
+
 #include "point_t.h"
 #include <cassert>
 #include <vector>
@@ -116,3 +118,6 @@ static tensor_t<float> to_tensor( std::vector<std::vector<std::vector<float>>> d
 				t( i, j, k ) = data[k][j][i];
 	return t;
 }
+
+#endif // TENSOR_T_H
+
