@@ -7,6 +7,19 @@
 #include "byteswap.h"
 #include "CNN/cnn.h"
 
+#define EPSILON 0.001
+
+#define EXPECT_NEAR(val1, val2, abs_error) \
+do \
+{ \
+  if (fabs(val1 - val2) > abs_error) \
+  { \
+    cout << "Incorrect control value: " << val1 << " != " << val2 << endl; \
+    exit(1); \
+  } \
+} \
+while (0)
+
 using namespace std;
 
 float train( vector<layer_t*>& layers, tensor_t<float>& data, tensor_t<float>& expected )
@@ -138,7 +151,20 @@ int main()
 			ic++;
 
 			if ( ep % 1000 == 0 )
-				cout << "case " << ep << " err=" << amse/ic << endl;
+			{
+				const double err = amse / ic;
+#if 1
+				if (ep == 1000)
+					EXPECT_NEAR(err, 76.7431, EPSILON);
+				else if (ep == 2000)
+					EXPECT_NEAR(err, 64.3735, EPSILON);
+				else if (ep == 3000)
+					EXPECT_NEAR(err, 55.8054, EPSILON);
+				else if (ep == 4000)
+					EXPECT_NEAR(err, 50.3824, EPSILON);
+#endif
+				cout << "case " << ep << " err = " << err << endl;
+			}
 		}
 	}
 
