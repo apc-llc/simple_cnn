@@ -6,7 +6,21 @@
 #pragma pack(push, 1)
 struct conv_layer_t
 {
-	layer_type type = layer_type::conv;
+	static void calc_grads( tensor_t<float>& grad_next_layer, void* layer )
+	{
+		((conv_layer_t*)layer)->calc_grads_(grad_next_layer);
+	}
+
+	static void fix_weights( void* layer )
+	{
+		((conv_layer_t*)layer)->fix_weights_();
+	}
+	
+	static void activate( tensor_t<float>& in, void* layer )
+	{
+		((conv_layer_t*)layer)->activate_( in );
+	}
+
 	tensor_t<float> grads_in;
 	tensor_t<float> in;
 	tensor_t<float> out;
@@ -99,13 +113,13 @@ struct conv_layer_t
 		};
 	}
 
-	void activate( tensor_t<float>& in )
+	void activate_( tensor_t<float>& in )
 	{
 		this->in = in;
-		activate();
+		activate_();
 	}
 
-	void activate()
+	void activate_()
 	{
 		for ( int filter = 0; filter < filters.size(); filter++ )
 		{
@@ -130,7 +144,7 @@ struct conv_layer_t
 		}
 	}
 
-	void fix_weights()
+	void fix_weights_()
 	{
 		for ( int a = 0; a < filters.size(); a++ )
 			for ( int i = 0; i < extend_filter; i++ )
@@ -144,7 +158,7 @@ struct conv_layer_t
 					}
 	}
 
-	void calc_grads( tensor_t<float>& grad_next_layer )
+	void calc_grads_( tensor_t<float>& grad_next_layer )
 	{
 
 		for ( int k = 0; k < filter_grads.size(); k++ )

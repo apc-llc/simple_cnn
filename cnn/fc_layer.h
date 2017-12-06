@@ -9,7 +9,21 @@
 #pragma pack(push, 1)
 struct fc_layer_t
 {
-	layer_type type = layer_type::fc;
+	static void calc_grads( tensor_t<float>& grad_next_layer, void* layer )
+	{
+		((fc_layer_t*)layer)->calc_grads_(grad_next_layer);
+	}
+
+	static void fix_weights( void* layer )
+	{
+		((fc_layer_t*)layer)->fix_weights_();
+	}
+	
+	static void activate( tensor_t<float>& in, void* layer )
+	{
+		((fc_layer_t*)layer)->activate_( in );
+	}
+
 	tensor_t<float> grads_in;
 	tensor_t<float> in;
 	tensor_t<float> out;
@@ -51,12 +65,6 @@ struct fc_layer_t
 		return sig * (1 - sig);
 	}
 
-	void activate( tensor_t<float>& in )
-	{
-		this->in = in;
-		activate();
-	}
-
 	int map( point_t d )
 	{
 		return d.z * (in.size.x * in.size.y) +
@@ -64,7 +72,13 @@ struct fc_layer_t
 			d.x;
 	}
 
-	void activate()
+	void activate_( tensor_t<float>& in )
+	{
+		this->in = in;
+		activate_();
+	}
+
+	void activate_()
 	{
 		for ( int n = 0; n < out.size.x; n++ )
 		{
@@ -84,7 +98,7 @@ struct fc_layer_t
 		}
 	}
 
-	void fix_weights()
+	void fix_weights_()
 	{
 		for ( int n = 0; n < out.size.x; n++ )
 		{
@@ -102,7 +116,7 @@ struct fc_layer_t
 		}
 	}
 
-	void calc_grads( tensor_t<float>& grad_next_layer )
+	void calc_grads_( tensor_t<float>& grad_next_layer )
 	{
 		memset( grads_in.data, 0, grads_in.size.x *grads_in.size.y*grads_in.size.z * sizeof( float ) );
 		for ( int n = 0; n < out.size.x; n++ )

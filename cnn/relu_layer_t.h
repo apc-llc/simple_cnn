@@ -6,7 +6,21 @@
 #pragma pack(push, 1)
 struct relu_layer_t
 {
-	layer_type type = layer_type::relu;
+	static void calc_grads( tensor_t<float>& grad_next_layer, void* layer )
+	{
+		((relu_layer_t*)layer)->calc_grads_(grad_next_layer);
+	}
+
+	static void fix_weights( void* layer )
+	{
+		((relu_layer_t*)layer)->fix_weights_();
+	}
+	
+	static void activate( tensor_t<float>& in, void* layer )
+	{
+		((relu_layer_t*)layer)->activate_( in );
+	}
+
 	tensor_t<float> grads_in;
 	tensor_t<float> in;
 	tensor_t<float> out;
@@ -19,14 +33,13 @@ struct relu_layer_t
 	{
 	}
 
-
-	void activate( tensor_t<float>& in )
+	void activate_( tensor_t<float>& in )
 	{
 		this->in = in;
-		activate();
+		activate_();
 	}
 
-	void activate()
+	void activate_()
 	{
 		for ( int i = 0; i < in.size.x; i++ )
 			for ( int j = 0; j < in.size.y; j++ )
@@ -40,12 +53,12 @@ struct relu_layer_t
 
 	}
 
-	void fix_weights()
+	void fix_weights_()
 	{
 
 	}
 
-	void calc_grads( tensor_t<float>& grad_next_layer )
+	void calc_grads_( tensor_t<float>& grad_next_layer )
 	{
 		for ( int i = 0; i < in.size.x; i++ )
 			for ( int j = 0; j < in.size.y; j++ )

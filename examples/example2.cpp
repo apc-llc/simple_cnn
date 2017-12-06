@@ -23,29 +23,29 @@ static uint32_t byteswap_uint32(uint32_t a)
 		(((a >> 8) & 0xff) << 16) | (((a >> 0) & 0xff) << 24));
 }
 
-float train( layer_t** layers, int nlayers, tensor_t<float>& data, tensor_t<float>& expected )
+float train( layer_t* layers, int nlayers, tensor_t<float>& data, tensor_t<float>& expected )
 {
 	for ( int i = 0; i < nlayers; i++ )
 	{
 		if ( i == 0 )
-			activate( layers[i], data );
+			layers[i].activate( data );
 		else
-			activate( layers[i], layers[i - 1]->out );
+			layers[i].activate( layers[i - 1].out );
 	}
 
-	tensor_t<float> grads = layers[nlayers - 1]->out - expected;
+	tensor_t<float> grads = layers[nlayers - 1].out - expected;
 
 	for ( int i = nlayers - 1; i >= 0; i-- )
 	{
 		if ( i == nlayers - 1 )
-			calc_grads( layers[i], grads );
+			layers[i].calc_grads( grads );
 		else
-			calc_grads( layers[i], layers[i + 1]->grads_in );
+			layers[i].calc_grads( layers[i + 1].grads_in );
 	}
 
 	for ( int i = 0; i < nlayers; i++ )
 	{
-		fix_weights( layers[i] );
+		layers[i].fix_weights();
 	}
 
 	float err = 0;
@@ -59,14 +59,14 @@ float train( layer_t** layers, int nlayers, tensor_t<float>& data, tensor_t<floa
 }
 
 
-void forward( layer_t** layers, int nlayers, tensor_t<float>& data )
+void forward( layer_t* layers, int nlayers, tensor_t<float>& data )
 {
 	for ( int i = 0; i < nlayers; i++ )
 	{
 		if ( i == 0 )
-			activate( layers[i], data );
+			layers[i].activate( data );
 		else
-			activate( layers[i], layers[i - 1]->out );
+			layers[i].activate( layers[i - 1].out );
 	}
 }
 
@@ -140,10 +140,10 @@ int main()
 
 	fc_layer_t layer7( layer6.out.size, 10 );           // 4 * 4 * 16 -> 10
 
-	layer_t* layers[] =
+	layer_t layers[] =
 	{ 
-		(layer_t*)&layer1, (layer_t*)&layer2, (layer_t*)&layer3, (layer_t*)&layer4,
-		(layer_t*)&layer5, (layer_t*)&layer6, (layer_t*)&layer7
+		layer_t(&layer1), layer_t(&layer2), layer_t(&layer3), layer_t(&layer4),
+		layer_t(&layer5), layer_t(&layer6), layer_t(&layer7)
 	};
 
 	int nlayers = sizeof(layers) / sizeof(layers[0]);
@@ -218,7 +218,7 @@ int main()
 			}
 
 			forward( layers, nlayers, image );
-			tensor_t<float>& out = layers[nlayers - 1]->out;
+			tensor_t<float>& out = layers[nlayers - 1].out;
 			for ( int i = 0; i < 10; i++ )
 			{
 				printf( "[%i] %f\n", i, out( i, 0, 0 )*100.0f );
