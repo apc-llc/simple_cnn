@@ -46,7 +46,6 @@ struct relu_layer_t
 						v = 0;
 					out( i, j, z ) = v;
 				}
-
 	}
 
 	void fix_weights_()

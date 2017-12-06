@@ -23,52 +23,67 @@ static uint32_t byteswap_uint32(uint32_t a)
 		(((a >> 8) & 0xff) << 16) | (((a >> 0) & 0xff) << 24));
 }
 
-float train( layer_t* layers, int nlayers, tensor_t<float>& data, tensor_t<float>& expected )
+struct model_t
 {
-	for ( int i = 0; i < nlayers; i++ )
+	layer_t* layers;
+	int nlayers;
+
+	tensor_t<float> grads;
+	
+	model_t(layer_t* layers_, int nlayers_, tdsize expected_size) :
+		layers(layers_), nlayers(nlayers_),
+		grads(expected_size.x, expected_size.y, expected_size.z) { }
+
+	float train( tensor_t<float>& data, tensor_t<float>& expected )
 	{
-		if ( i == 0 )
-			layers[i].activate( data );
-		else
-			layers[i].activate( layers[i - 1].out );
+		for ( int i = 0; i < nlayers; i++ )
+		{
+			if ( i == 0 )
+				layers[i].activate( data );
+			else
+				layers[i].activate( layers[i - 1].out );
+		}
+
+		for ( int i = 0; i < grads.size.x * grads.size.y * grads.size.z; i++ )
+		{
+			float& f = grads.data[i];
+			f = layers[nlayers - 1].out.data[i] - expected.data[i];
+		}
+
+		for ( int i = nlayers - 1; i >= 0; i-- )
+		{
+			if ( i == nlayers - 1 )
+				layers[i].calc_grads( grads );
+			else
+				layers[i].calc_grads( layers[i + 1].grads_in );
+		}
+
+		for ( int i = 0; i < nlayers; i++ )
+		{
+			layers[i].fix_weights();
+		}
+
+		float err = 0;
+		for ( int i = 0; i < grads.size.x * grads.size.y * grads.size.z; i++ )
+		{
+			float f = expected.data[i];
+			if ( f > 0.5 )
+				err += fabs(grads.data[i]);
+		}
+		return err * 100;
 	}
 
-	tensor_t<float> grads = layers[nlayers - 1].out - expected;
-
-	for ( int i = nlayers - 1; i >= 0; i-- )
+	void forward( tensor_t<float>& data )
 	{
-		if ( i == nlayers - 1 )
-			layers[i].calc_grads( grads );
-		else
-			layers[i].calc_grads( layers[i + 1].grads_in );
+		for ( int i = 0; i < nlayers; i++ )
+		{
+			if ( i == 0 )
+				layers[i].activate( data );
+			else
+				layers[i].activate( layers[i - 1].out );
+		}
 	}
-
-	for ( int i = 0; i < nlayers; i++ )
-	{
-		layers[i].fix_weights();
-	}
-
-	float err = 0;
-	for ( int i = 0; i < grads.size.x * grads.size.y * grads.size.z; i++ )
-	{
-		float f = expected.data[i];
-		if ( f > 0.5 )
-			err += fabs(grads.data[i]);
-	}
-	return err * 100;
-}
-
-
-void forward( layer_t* layers, int nlayers, tensor_t<float>& data )
-{
-	for ( int i = 0; i < nlayers; i++ )
-	{
-		if ( i == 0 )
-			layers[i].activate( data );
-		else
-			layers[i].activate( layers[i - 1].out );
-	}
-}
+};
 
 struct case_t
 {
@@ -151,6 +166,8 @@ int main()
 	float amse = 0;
 	int ic = 0;
 
+	model_t model( layers, nlayers, cases[0].out.size );
+
 	for ( long ep = 0; ep < 100000; )
 	{
 
@@ -158,7 +175,7 @@ int main()
 		{
 			case_t& t = cases[i];
 
-			float xerr = train( layers, nlayers, t.data, t.out );
+			float xerr = model.train( t.data, t.out );
 			amse += xerr;
 
 			ep++;
@@ -217,7 +234,7 @@ int main()
 				}
 			}
 
-			forward( layers, nlayers, image );
+			model.forward( image );
 			tensor_t<float>& out = layers[nlayers - 1].out;
 			for ( int i = 0; i < 10; i++ )
 			{
