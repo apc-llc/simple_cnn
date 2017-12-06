@@ -21,9 +21,9 @@ while (0)
 
 using namespace std;
 
-float train( vector<layer_t*>& layers, tensor_t<float>& data, tensor_t<float>& expected )
+float train( layer_t** layers, int nlayers, tensor_t<float>& data, tensor_t<float>& expected )
 {
-	for ( int i = 0; i < layers.size(); i++ )
+	for ( int i = 0; i < nlayers; i++ )
 	{
 		if ( i == 0 )
 			activate( layers[i], data );
@@ -31,17 +31,17 @@ float train( vector<layer_t*>& layers, tensor_t<float>& data, tensor_t<float>& e
 			activate( layers[i], layers[i - 1]->out );
 	}
 
-	tensor_t<float> grads = layers.back()->out - expected;
+	tensor_t<float> grads = layers[nlayers - 1]->out - expected;
 
-	for ( int i = layers.size() - 1; i >= 0; i-- )
+	for ( int i = nlayers - 1; i >= 0; i-- )
 	{
-		if ( i == layers.size() - 1 )
+		if ( i == nlayers - 1 )
 			calc_grads( layers[i], grads );
 		else
 			calc_grads( layers[i], layers[i + 1]->grads_in );
 	}
 
-	for ( int i = 0; i < layers.size(); i++ )
+	for ( int i = 0; i < nlayers; i++ )
 	{
 		fix_weights( layers[i] );
 	}
@@ -57,9 +57,9 @@ float train( vector<layer_t*>& layers, tensor_t<float>& data, tensor_t<float>& e
 }
 
 
-void forward( vector<layer_t*>& layers, tensor_t<float>& data )
+void forward( layer_t** layers, int nlayers, tensor_t<float>& data )
 {
-	for ( int i = 0; i < layers.size(); i++ )
+	for ( int i = 0; i < nlayers; i++ )
 	{
 		if ( i == 0 )
 			activate( layers[i], data );
@@ -128,25 +128,23 @@ int main()
 
 	vector<case_t> cases = read_test_cases();
 
-	vector<layer_t*> layers;
+	conv_layer_t layer1( 1, 5, 8, cases[0].data.size ); // 28 * 28 * 1 -> 24 * 24 * 8
+	relu_layer_t layer2( layer1.out.size );
+	pool_layer_t layer3( 2, 2, layer2.out.size );       // 24 * 24 * 8 -> 12 * 12 * 8
 
-	conv_layer_t * layer1 = new conv_layer_t( 1, 5, 8, cases[0].data.size );		// 28 * 28 * 1 -> 24 * 24 * 8
-	relu_layer_t * layer2 = new relu_layer_t( layer1->out.size );
-	pool_layer_t * layer3 = new pool_layer_t( 2, 2, layer2->out.size );				// 24 * 24 * 8 -> 12 * 12 * 8
+	conv_layer_t layer4( 1, 3, 10, layer3.out.size );   // 12 * 12 * 6 -> 10 * 10 * 10
+	relu_layer_t layer5( layer4.out.size );
+	pool_layer_t layer6( 2, 2, layer5.out.size );       // 10 * 10 * 10 -> 5 * 5 * 10
 
-	conv_layer_t * layer4 = new conv_layer_t( 1, 3, 10, layer3->out.size );			// 12 * 12 * 6 -> 10 * 10 * 10
-	relu_layer_t * layer5 = new relu_layer_t( layer4->out.size );
-	pool_layer_t * layer6 = new pool_layer_t( 2, 2, layer5->out.size );				// 10 * 10 * 10 -> 5 * 5 * 10
+	fc_layer_t layer7( layer6.out.size, 10 );           // 4 * 4 * 16 -> 10
 
-	fc_layer_t * layer7 = new fc_layer_t( layer6->out.size, 10 );					// 4 * 4 * 16 -> 10
+	layer_t* layers[] =
+	{ 
+		(layer_t*)&layer1, (layer_t*)&layer2, (layer_t*)&layer3, (layer_t*)&layer4,
+		(layer_t*)&layer5, (layer_t*)&layer6, (layer_t*)&layer7
+	};
 
-	layers.push_back( (layer_t*)layer1 );
-	layers.push_back( (layer_t*)layer2 );
-	layers.push_back( (layer_t*)layer3 );
-	layers.push_back( (layer_t*)layer4 );
-	layers.push_back( (layer_t*)layer5 );
-	layers.push_back( (layer_t*)layer6 );
-	layers.push_back( (layer_t*)layer7 );
+	int nlayers = sizeof(layers) / sizeof(layers[0]);
 
 	float amse = 0;
 	int ic = 0;
@@ -156,7 +154,7 @@ int main()
 
 		for ( case_t& t : cases )
 		{
-			float xerr = train( layers, t.data, t.out );
+			float xerr = train( layers, nlayers, t.data, t.out );
 			amse += xerr;
 
 			ep++;
@@ -213,8 +211,8 @@ int main()
 				}
 			}
 
-			forward( layers, image );
-			tensor_t<float>& out = layers.back()->out;
+			forward( layers, nlayers, image );
+			tensor_t<float>& out = layers[nlayers - 1]->out;
 			for ( int i = 0; i < 10; i++ )
 			{
 				printf( "[%i] %f\n", i, out( i, 0, 0 )*100.0f );
