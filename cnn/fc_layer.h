@@ -75,11 +75,7 @@ struct fc_layer_t
 	void activate_( tensor_t<float>& in )
 	{
 		this->in = in;
-		activate_();
-	}
 
-	void activate_()
-	{
 		for ( int n = 0; n < out.size.x; n++ )
 		{
 			float inputv = 0;

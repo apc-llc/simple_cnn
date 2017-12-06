@@ -36,11 +36,7 @@ struct relu_layer_t
 	void activate_( tensor_t<float>& in )
 	{
 		this->in = in;
-		activate_();
-	}
 
-	void activate_()
-	{
 		for ( int i = 0; i < in.size.x; i++ )
 			for ( int j = 0; j < in.size.y; j++ )
 				for ( int z = 0; z < in.size.z; z++ )

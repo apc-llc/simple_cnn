@@ -41,11 +41,7 @@ struct dropout_layer_t
 	void activate_( tensor_t<float>& in )
 	{
 		this->in = in;
-		activate_();
-	}
 
-	void activate_()
-	{
 		for ( int i = 0; i < in.size.x*in.size.y*in.size.z; i++ )
 		{
 			bool active = (rand() % RAND_MAX) / float( RAND_MAX ) <= p_activation;

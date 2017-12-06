@@ -95,11 +95,7 @@ struct pool_layer_t
 	void activate_( tensor_t<float>& in )
 	{
 		this->in = in;
-		activate_();
-	}
 
-	void activate_()
-	{
 		for ( int x = 0; x < out.size.x; x++ )
 		{
 			for ( int y = 0; y < out.size.y; y++ )

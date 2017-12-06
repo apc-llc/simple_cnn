@@ -116,11 +116,7 @@ struct conv_layer_t
 	void activate_( tensor_t<float>& in )
 	{
 		this->in = in;
-		activate_();
-	}
 
-	void activate_()
-	{
 		for ( int filter = 0; filter < filters.size(); filter++ )
 		{
 			tensor_t<float>& filter_data = filters[filter];
