@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "CNN/cnn.h"
+#include "cnn/cnn.h"
 
 #define EPSILON 0.001
 
