@@ -4,6 +4,14 @@
 
 #define EPSILON 0.001
 
+#define SMALL_TEST
+
+#ifdef SMALL_TEST
+#define SZIMAGE 28
+#else
+#define SZIMAGE 56
+#endif
+
 #define EXPECT_NEAR(val1, val2, abs_error) \
 do \
 { \
@@ -91,7 +99,7 @@ struct case_t
 	tensor_t<float> data;
 	tensor_t<float> out;
 	
-	case_t() : data( 28, 28, 1 ), out( 10, 1, 1 ) { }
+	case_t() : data( SZIMAGE, SZIMAGE, 1 ), out( 10, 1, 1 ) { }
 };
 
 uint8_t* read_file( const char* szFile )
@@ -123,9 +131,17 @@ void* read_test_cases( case_t** cases_, int* ncases_ )
 		uint8_t* img = train_image + 16 + i * (28 * 28);
 		uint8_t* label = train_labels + 8 + i;
 
-		for ( int x = 0; x < 28; x++ )
-			for ( int y = 0; y < 28; y++ )
-				c.data( x, y, 0 ) = img[x + y * 28] / 255.f;
+#ifdef SMALL_TEST
+		for ( int x = 0; x < SZIMAGE; x++ )
+			for ( int y = 0; y < SZIMAGE; y++ )
+				c.data( x, y, 0 ) = img[x + y * SZIMAGE] / 255.f;
+#else
+		for ( int x = 0; x < SZIMAGE; x++ )
+			for ( int y = 0; y < SZIMAGE; y++ )
+				for ( int scalex; scalex < SZIMAGE / 28; scalex++)
+					for ( int scaley; scaley < SZIMAGE / 28; scaley++)
+						c.data( x * 10 + scalex, y * 10 + scaley, 0 ) = img[x + y * SZIMAGE] / 255.f;
+#endif
 
 		for ( int b = 0; b < 10; b++ )
 			c.out( b, 0, 0 ) = *label == b ? 1.0f : 0.0f;
@@ -159,7 +175,7 @@ int main()
 	
 	model_t model( layers, nlayers, cases[0].out.size );
 
-	for ( long ep = 0; ep < 100000; )
+	for ( long ep = 0; ep < 20000; )
 	{
 
 		for ( int i = 0; i < ncases; i++ )
@@ -187,6 +203,8 @@ int main()
 #endif
 				cout << "case " << ep << " err = " << err << endl;
 			}
+
+			if (ep >= 20000) break;
 		}
 	}
 
