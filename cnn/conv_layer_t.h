@@ -6,23 +6,22 @@
 #pragma pack(push, 1)
 struct conv_layer_t
 {
-	static void calc_grads( tensor_t<float>& grad_next_layer, void* layer )
+	static void calc_grads( const tensor_t<float>& in, tensor_t<float>& grad_next_layer, void* layer )
 	{
-		((conv_layer_t*)layer)->calc_grads_(grad_next_layer);
+		((conv_layer_t*)layer)->calc_grads_( in, grad_next_layer );
 	}
 
-	static void fix_weights( void* layer )
+	static void fix_weights( const tensor_t<float>& in, void* layer )
 	{
-		((conv_layer_t*)layer)->fix_weights_();
+		((conv_layer_t*)layer)->fix_weights_( in );
 	}
 	
-	static void activate( tensor_t<float>& in, void* layer )
+	static void activate( const tensor_t<float>& in, void* layer )
 	{
 		((conv_layer_t*)layer)->activate_( in );
 	}
 
 	tensor_t<float> grads_in;
-	tensor_t<float> in;
 	tensor_t<float> out;
 	std::vector<tensor_t<float>> filters;
 	std::vector<tensor_t<gradient_t>> filter_grads;
@@ -32,7 +31,6 @@ struct conv_layer_t
 	conv_layer_t( uint16_t stride, uint16_t extend_filter, uint16_t number_filters, tdsize in_size )
 		:
 		grads_in( in_size.x, in_size.y, in_size.z ),
-		in( in_size.x, in_size.y, in_size.z ),
 		out(
 		(in_size.x - extend_filter) / stride + 1,
 			(in_size.y - extend_filter) / stride + 1,
@@ -70,7 +68,7 @@ struct conv_layer_t
 
 	}
 
-	point_t map_to_input( point_t out, int z )
+	point_t map_to_input( point_t out, int z ) const
 	{
 		out.x *= stride;
 		out.y *= stride;
@@ -113,13 +111,11 @@ struct conv_layer_t
 		};
 	}
 
-	void activate_( tensor_t<float>& in )
+	void activate_( const tensor_t<float>& in )
 	{
-		this->in = in;
-
 		for ( int filter = 0; filter < filters.size(); filter++ )
 		{
-			tensor_t<float>& filter_data = filters[filter];
+			const tensor_t<float>& filter_data = filters[filter];
 			for ( int x = 0; x < out.size.x; x++ )
 			{
 				for ( int y = 0; y < out.size.y; y++ )
@@ -140,7 +136,7 @@ struct conv_layer_t
 		}
 	}
 
-	void fix_weights_()
+	void fix_weights_( const tensor_t<float>& in )
 	{
 		for ( int a = 0; a < filters.size(); a++ )
 			for ( int i = 0; i < extend_filter; i++ )
@@ -154,7 +150,7 @@ struct conv_layer_t
 					}
 	}
 
-	void calc_grads_( tensor_t<float>& grad_next_layer )
+	void calc_grads_( const tensor_t<float>& in, tensor_t<float>& grad_next_layer )
 	{
 
 		for ( int k = 0; k < filter_grads.size(); k++ )
