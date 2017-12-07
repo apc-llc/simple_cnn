@@ -52,6 +52,7 @@ struct model_t
 				layers[i].activate( layers[i - 1].out );
 		}
 
+		#pragma omp parallel for
 		for ( int i = 0; i < grads.size.x * grads.size.y * grads.size.z; i++ )
 		{
 			float& f = grads.data[i];
@@ -61,17 +62,24 @@ struct model_t
 		for ( int i = nlayers - 1; i >= 0; i-- )
 		{
 			if ( i == nlayers - 1 )
-				layers[i].calc_grads( grads );
+				layers[i].calc_grads( layers[i - 1].out, grads );
+			else if (i == 0)
+				layers[i].calc_grads( data, layers[i + 1].grads_in );
 			else
-				layers[i].calc_grads( layers[i + 1].grads_in );
+				layers[i].calc_grads( layers[i - 1].out, layers[i + 1].grads_in );
 		}
 
+		#pragma omp parallel for
 		for ( int i = 0; i < nlayers; i++ )
 		{
-			layers[i].fix_weights();
+			if ( i == 0 )
+				layers[i].fix_weights( data );
+			else
+				layers[i].fix_weights( layers[i - 1].out );
 		}
 
 		float err = 0;
+		#pragma omp parallel for reduction(+:err)
 		for ( int i = 0; i < grads.size.x * grads.size.y * grads.size.z; i++ )
 		{
 			float f = expected.data[i];

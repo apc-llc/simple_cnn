@@ -37,7 +37,24 @@ struct tensor_t
 		return this->get( _x, _y, _z );
 	}
 
+	const T& operator()( int _x, int _y, int _z ) const
+	{
+		return this->get( _x, _y, _z );
+	}
+
 	T& get( int _x, int _y, int _z )
+	{
+		assert( _x >= 0 && _y >= 0 && _z >= 0 );
+		assert( _x < size.x && _y < size.y && _z < size.z );
+
+		return data[
+			_z * (size.x * size.y) +
+				_y * (size.x) +
+				_x
+		];
+	}
+
+	const T& get( int _x, int _y, int _z ) const
 	{
 		assert( _x >= 0 && _y >= 0 && _z >= 0 );
 		assert( _x < size.x && _y < size.y && _z < size.z );

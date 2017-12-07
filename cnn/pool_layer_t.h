@@ -6,23 +6,22 @@
 #pragma pack(push, 1)
 struct pool_layer_t
 {
-	static void calc_grads( tensor_t<float>& grad_next_layer, void* layer )
+	static void calc_grads( const tensor_t<float>& in, tensor_t<float>& grad_next_layer, void* layer )
 	{
-		((pool_layer_t*)layer)->calc_grads_(grad_next_layer);
+		((pool_layer_t*)layer)->calc_grads_( in, grad_next_layer );
 	}
 
-	static void fix_weights( void* layer )
+	static void fix_weights( const tensor_t<float>& in, void* layer )
 	{
-		((pool_layer_t*)layer)->fix_weights_();
+
 	}
 	
-	static void activate( tensor_t<float>& in, void* layer )
+	static void activate( const tensor_t<float>& in, void* layer )
 	{
 		((pool_layer_t*)layer)->activate_( in );
 	}
 
 	tensor_t<float> grads_in;
-	tensor_t<float> in;
 	tensor_t<float> out;
 	uint16_t stride;
 	uint16_t extend_filter;
@@ -30,7 +29,6 @@ struct pool_layer_t
 	pool_layer_t( uint16_t stride, uint16_t extend_filter, tdsize in_size )
 		:
 		grads_in( in_size.x, in_size.y, in_size.z ),
-		in( in_size.x, in_size.y, in_size.z ),
 		out(
 		(in_size.x - extend_filter) / stride + 1,
 			(in_size.y - extend_filter) / stride + 1,
@@ -92,10 +90,8 @@ struct pool_layer_t
 		};
 	}
 
-	void activate_( tensor_t<float>& in )
+	void activate_( const tensor_t<float>& in )
 	{
-		this->in = in;
-
 		for ( int x = 0; x < out.size.x; x++ )
 		{
 			for ( int y = 0; y < out.size.y; y++ )
@@ -117,12 +113,7 @@ struct pool_layer_t
 		}
 	}
 
-	void fix_weights_()
-	{
-
-	}
-
-	void calc_grads_( tensor_t<float>& grad_next_layer )
+	void calc_grads_( const tensor_t<float>& in, tensor_t<float>& grad_next_layer )
 	{
 		for ( int x = 0; x < in.size.x; x++ )
 		{

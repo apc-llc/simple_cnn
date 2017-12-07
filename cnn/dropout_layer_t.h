@@ -6,17 +6,17 @@
 #pragma pack(push, 1)
 struct dropout_layer_t
 {
-	static void calc_grads( tensor_t<float>& grad_next_layer, void* layer )
+	static void calc_grads( const tensor_t<float>& in, tensor_t<float>& grad_next_layer, void* layer )
 	{
-		((dropout_layer_t*)layer)->calc_grads_(grad_next_layer);
+		((dropout_layer_t*)layer)->calc_grads_( in, grad_next_layer );
 	}
 
-	static void fix_weights( void* layer )
+	static void fix_weights( const tensor_t<float>& in, void* layer )
 	{
-		((dropout_layer_t*)layer)->fix_weights_();
+
 	}
 	
-	static void activate( tensor_t<float>& in, void* layer )
+	static void activate( const tensor_t<float>& in, void* layer )
 	{
 		((dropout_layer_t*)layer)->activate_( in );
 	}
@@ -38,7 +38,7 @@ struct dropout_layer_t
 		
 	}
 
-	void activate_( tensor_t<float>& in )
+	void activate_( const tensor_t<float>& in )
 	{
 		this->in = in;
 
@@ -50,13 +50,7 @@ struct dropout_layer_t
 		}
 	}
 
-
-	void fix_weights_()
-	{
-		
-	}
-
-	void calc_grads_( tensor_t<float>& grad_next_layer )
+	void calc_grads_( const tensor_t<float>& in, tensor_t<float>& grad_next_layer )
 	{
 		for ( int i = 0; i < in.size.x*in.size.y*in.size.z; i++ )
 			grads_in.data[i] = hitmap.data[i] ? grad_next_layer.data[i] : 0.0f;

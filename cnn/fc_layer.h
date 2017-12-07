@@ -9,23 +9,22 @@
 #pragma pack(push, 1)
 struct fc_layer_t
 {
-	static void calc_grads( tensor_t<float>& grad_next_layer, void* layer )
+	static void calc_grads( const tensor_t<float>& in, tensor_t<float>& grad_next_layer, void* layer )
 	{
-		((fc_layer_t*)layer)->calc_grads_(grad_next_layer);
+		((fc_layer_t*)layer)->calc_grads_( in, grad_next_layer);
 	}
 
-	static void fix_weights( void* layer )
+	static void fix_weights( const tensor_t<float>& in, void* layer )
 	{
-		((fc_layer_t*)layer)->fix_weights_();
+		((fc_layer_t*)layer)->fix_weights_( in );
 	}
 	
-	static void activate( tensor_t<float>& in, void* layer )
+	static void activate( const tensor_t<float>& in, void* layer )
 	{
 		((fc_layer_t*)layer)->activate_( in );
 	}
 
 	tensor_t<float> grads_in;
-	tensor_t<float> in;
 	tensor_t<float> out;
 	std::vector<float> input;
 	tensor_t<float> weights;
@@ -33,7 +32,6 @@ struct fc_layer_t
 
 	fc_layer_t( tdsize in_size, int out_size )
 		:
-		in( in_size.x, in_size.y, in_size.z ),
 		out( out_size, 1, 1 ),
 		grads_in( in_size.x, in_size.y, in_size.z ),
 		weights( in_size.x*in_size.y*in_size.z, out_size, 1 )
@@ -65,17 +63,15 @@ struct fc_layer_t
 		return sig * (1 - sig);
 	}
 
-	int map( point_t d )
+	int map( const tdsize& in_size, point_t d )
 	{
-		return d.z * (in.size.x * in.size.y) +
-			d.y * (in.size.x) +
+		return d.z * (in_size.x * in_size.y) +
+			d.y * (in_size.x) +
 			d.x;
 	}
 
-	void activate_( tensor_t<float>& in )
+	void activate_( const tensor_t<float>& in )
 	{
-		this->in = in;
-
 		for ( int n = 0; n < out.size.x; n++ )
 		{
 			float inputv = 0;
@@ -84,7 +80,7 @@ struct fc_layer_t
 				for ( int j = 0; j < in.size.y; j++ )
 					for ( int z = 0; z < in.size.z; z++ )
 					{
-						int m = map( { i, j, z } );
+						int m = map(in.size, { i, j, z } );
 						inputv += in( i, j, z ) * weights( m, n, 0 );
 					}
 
@@ -94,7 +90,7 @@ struct fc_layer_t
 		}
 	}
 
-	void fix_weights_()
+	void fix_weights_( const tensor_t<float>& in )
 	{
 		for ( int n = 0; n < out.size.x; n++ )
 		{
@@ -103,7 +99,7 @@ struct fc_layer_t
 				for ( int j = 0; j < in.size.y; j++ )
 					for ( int z = 0; z < in.size.z; z++ )
 					{
-						int m = map( { i, j, z } );
+						int m = map(in.size, { i, j, z } );
 						float& w = weights( m, n, 0 );
 						w = update_weight( w, grad, in( i, j, z ) );
 					}
@@ -112,7 +108,7 @@ struct fc_layer_t
 		}
 	}
 
-	void calc_grads_( tensor_t<float>& grad_next_layer )
+	void calc_grads_( const tensor_t<float>& in, tensor_t<float>& grad_next_layer )
 	{
 		memset( grads_in.data, 0, grads_in.size.x *grads_in.size.y*grads_in.size.z * sizeof( float ) );
 		for ( int n = 0; n < out.size.x; n++ )
@@ -124,7 +120,7 @@ struct fc_layer_t
 				for ( int j = 0; j < in.size.y; j++ )
 					for ( int z = 0; z < in.size.z; z++ )
 					{
-						int m = map( { i, j, z } );
+						int m = map(in.size, { i, j, z } );
 						grads_in( i, j, z ) += grad.grad * weights( m, n, 0 );
 					}
 		}
